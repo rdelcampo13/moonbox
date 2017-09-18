@@ -1,3 +1,42 @@
+// Initialize Firebase
+var config = {
+  apiKey: "AIzaSyCbDeeoaeJnJnEHLtjmn3JLsu2vR2aj77w",
+  authDomain: "moonbox-50244.firebaseapp.com",
+  databaseURL: "https://moonbox-50244.firebaseio.com",
+  projectId: "moonbox-50244",
+  storageBucket: "",
+  messagingSenderId: "109156262057"
+};
+firebase.initializeApp(config);
+
+var database = firebase.database();
+var commentCount;
+
+database.ref().limitToLast(10).once("value").then(function(snapshot) {
+
+  snapshot.forEach(function(childSnapshot) {
+    var childKey = childSnapshot.key;
+    var childData = childSnapshot.val();
+    console.log(childData);
+    var message = $('<div>').addClass('message');
+    var member = $('<div>').addClass('member');
+    member.css('color', childData.userColor);
+    member.text(childData.userName);
+
+    message.append(member);
+    message.append(childData.text);
+
+    $("#messages").append(message);
+
+  });
+
+});
+
+
+
+
+//------------- ScaleDrone STUFF
+
 const CHANNEL_ID = 'zXYts5v5NuQOLVpT';
 
 const drone = new ScaleDrone(CHANNEL_ID, {
@@ -8,7 +47,6 @@ const drone = new ScaleDrone(CHANNEL_ID, {
 });
 
 let members = [];
-
 
 //------------- DOM STUFF
 
@@ -30,7 +68,7 @@ function createMemberElement(member) {
 }
 
 function updateMembersDOM() {
-  // DOM.membersCount.innerText = `${members.length} users in room:`;
+  DOM.membersCount.innerText = `${members.length} users online`;
   // DOM.membersList.innerHTML = '';
   // members.forEach(member =>
   //   DOM.membersList.appendChild(createMemberElement(member))
@@ -87,6 +125,18 @@ drone.on('open', error => {
   room.on('data', (text, member) => {
     if (member) {
       addMessageToListDOM(text, member);
+      var timeStamp = new Date().getTime().toString();
+      var userName = member.clientData.name
+      var userColor = member.clientData.color
+
+        database.ref().push({
+        	userName,
+          userColor,
+        	text,
+        	timeStamp,
+         });
+
+
     } else {
       // Message is from server
     }
